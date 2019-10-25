@@ -8,65 +8,68 @@
 
 import React, { Component } from 'react';
 import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  TextInput,
-  TouchableHighlight,
+	Dimensions,
+	SafeAreaView,
+	ScrollView,
+	View,
+	Text,
+	TextInput,
+	TouchableHighlight,
   StatusBar,
 } from 'react-native';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
 const words = require('./words_dictionary.json'); //with path
-
-
-const sz = 30;
-const mz = sz/2;
 
 const Box = (props) => {
   const {
-    lv,
-    pressLetter
+	lv,
+	stt = 100,
+	pressLetter
   } = props;
+
+  console.log(JSON.stringify(props))
 
   return (
     <TouchableHighlight onPress={(lv != null) ? () => pressLetter(lv) : null}>
-      <View style={{justifyContent: 'center', alignItems: 'center', height: sz, width: sz, marginLeft: sz, borderWidth: (lv != null) ? 1:0}}>
-        {(lv != null) && <Text style={{fontWeight: 'bold'}}>{this.state.ourLetters[lv]}</Text> }
+      <View style={{justifyContent: 'center', alignItems: 'center', height: stt.sz, width: stt.sz, marginRight: stt.sz, borderWidth: (lv != null) ? 1:0}}>
+        {(lv != null) && <Text style={{fontWeight: 'bold'}}>{stt.ourLetters[lv]}</Text> }
      </View> 
      </TouchableHighlight>
   )
 }
 
+const numOfLines = 26;
+
 //const App: () => React$Node = () => {
   class App extends Component {
     
     constructor(props) {
-      super(props)
-  
-      this.state = {
-          inputWord: [],
-          message: '',
-          wordList: [],
-          ourLetters: [],
-          ourLettersWord: ''
-      }
+	  super(props)
+	  
+		this.state = {
+			height: 0,
+			width: 0,
+			sz: 0,
+			mz: 0,
+			inputWord: [],
+			message: '',
+			wordList: [],
+			ourLetters: [],
+			ourLettersWord: '',
+			gameOn: false
+		}
     }
+
+	restartFull = () => {
+		this.restartSmall();
+		this.startState();
+	}
 
     startState = () => {
-      this.setState({ourLetters: [], ourLettersWord: ''})
+      this.setState({ourLetters: [], ourLettersWord: '', gameOn: false})
     }
 
-    initState = () => {
+    restartSmall = () => {
       this.setState({
         inputWord: [],
         message: '',
@@ -104,7 +107,9 @@ const Box = (props) => {
       else if (this.state.inputWord.indexOf(this.state.ourLetters[0]) == -1)
         message = 'You did not use the center letter'
       else if (this.state.inputWord.length < 3)
-        message = 'Words must be at least 3 characters long'
+		message = 'Words must be at least 3 characters long'
+	  else if (this.state.wordList.indexOf(this.state.inputWord.join("")) > -1)
+	 	message = `Sorry... Word ${this.showAWord(this.state.inputWord.join(""))} already found!`
       else {
         let result = this.testWord()
         if (result) {
@@ -139,130 +144,185 @@ const Box = (props) => {
     }
 
     updateStart = (text) => {
-        this.setState({
-          ourLettersWord: text.toUpperCase(), 
-          ourLetters: text.toUpperCase().split("")
-        })
-    }
+
+		if (this.state.ourLetters.indexOf(text.toUpperCase()) > -1)
+			alert(`Sorry the letter ${text.toUpperCase()} has already been used!`)
+		else {
+			let newWord = this.state.ourLettersWord + text.toUpperCase();
+			newWord = newWord.slice(0,7);
+
+			this.setState({
+			ourLettersWord: newWord, 
+			ourLetters: newWord.toUpperCase().split(""),
+			gameOn: (newWord.length > 6)
+			})
+		}
+	}
+
+	show_box_grid = () => {
+
+		return (
+
+			<View style={{height: this.state.sz * 6, width: this.state.width, justifyContent: 'center', borderWidth: 0, borderColor: 'green', alignItems: 'center', marginBottom: this.state.mz}}>
+				<View style={{flexDirection: 'row'}}>
+					<Box stt={this.state}/><Box pressLetter={this.pressLetter}  stt={this.state} lv={1}/><Box stt={this.state} />
+				</View>
+				<View style={{flexDirection: 'row'}}>
+					<Box pressLetter={this.pressLetter}  stt={this.state} lv={2}/><Box  stt={this.state}/><Box pressLetter={this.pressLetter}  stt={this.state} lv={3}/>
+				</View>
+				<View style={{flexDirection: 'row'}}>
+					<Box  stt={this.state}/><Box pressLetter={this.pressLetter}  stt={this.state} lv={0}/><Box  stt={this.state}/>
+				</View>
+				<View style={{flexDirection: 'row'}}>
+					<Box pressLetter={this.pressLetter}  stt={this.state} lv={4}/><Box stt={this.state}/><Box pressLetter={this.pressLetter}  stt={this.state} lv={5} />
+				</View>
+				<View style={{flexDirection: 'row'}}>
+					<Box stt={this.state} /><Box pressLetter={this.pressLetter}  stt={this.state} lv={6}/><Box stt={this.state} />
+				</View>
+			</View>
+		)
+	}
+
+	title = () => {
+		return (
+			<View style={{
+				justifyContent: 'center', 
+				alignItems: 'center', 
+				marginLeft: this.state.mz, 
+				marginRight: this.state.mz, 
+				height: this.state.sz * 4, 
+				width: this.state.width - (2 * this.state.mz), borderWidth: 0}}>
+				<View style={{marginBottom: this.state.mz}}>
+					<Text style={{fontSize: 20, fontWeight: 'bold'}}>Welcome to Spell2</Text></View>
+				<View>
+					<Text style={{fontSize: 15, fontWeight: 'bold'}}>- Use the center letter and other letters</Text></View>
+				<View>
+					<Text style={{fontSize: 15, fontWeight: 'bold'}}>- Three letters minimum per word</Text></View>
+			</View>
+		)
+
+	}
+
+	gameIsOn = () => {
+		return (
+			<View style={{justifyContent: 'center', alignItems: 'center'}}>
+				{ this.title() }
+
+				<View style={{height: this.state.sz * 8, width: this.state.width - (this.state.mz * 2), marginLeft: this.state.mz}}>
+					
+					<ScrollView 
+						style={{height: this.state.sz * 8, width: this.state.width - (this.state.mz * 3), borderWidth: 0, borderColor: 'red', marginBottom: this.state.mz}}
+						contentContainerStyle={{flex: 1, flexGrow: 1, flexDirection: 'row', flexWrap: 'wrap'}}
+					>
+						{ this.showWords() }
+
+					</ScrollView>
+				</View>
+				<TouchableHighlight onPress={this.processWord}>
+					<View style={{
+						height: this.state.sz * 2, 
+						width: this.state.width - (this.state.sz * 3), 
+						justifyContent: 'center', alignItems: 'center', 
+						borderWidth: 3, 
+						borderColor: 'blue', 
+						marginBottom: this.state.mz
+						}}>
+						<Text style={{fontWeight: 'bold', fontSize: 20}}>{this.state.inputWord}</Text>
+					</View>
+				</TouchableHighlight>
+
+				{ this.show_box_grid() }
+
+				<View style={{height: this.state.sz * 2, width: this.state.width, marginLeft: this.state.sz, justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginBottom: this.state.mz}}>
+					<Text style={{fontWeight: 'bold', fontSize: 15}}>{this.state.message}</Text>
+				</View>
+
+				<View style={{flexDirection: 'row', height: this.state.sz * 1.5, width: this.state.width}}>
+					<TouchableHighlight onLongPress={this.restartSmall}>
+						<View style={{height: this.state.sz * 1.5, width: this.state.width/10*2, marginLeft: this.state.width/10, justifyContent: 'center', alignItems: 'center', borderWidth: 1}}>
+							<Text style={{ fontSize: 14}}>reset</Text>
+							<Text style={{ fontSize: 14}}>long press</Text>
+						</View>
+					</TouchableHighlight>
+
+					<TouchableHighlight onPress={this.deleteWord}>
+						<View style={{height: this.state.sz * 1.5, width: this.state.width/10*2, marginLeft: this.state.width/10, justifyContent: 'center', alignItems: 'center', borderWidth: 1}}>
+							<Text style={{fontWeight: 'bold', fontSize: 20}}>DELETE</Text>
+						</View>
+					</TouchableHighlight>
+
+					<TouchableHighlight onLongPress={this.restartFull}>
+						<View style={{height: this.state.sz * 1.5, width: this.state.width/10*2, marginLeft: this.state.width/10, justifyContent: 'center', alignItems: 'center', borderWidth: 1}}>
+							<Text style={{fontSize: 14}}>new letters</Text>
+							<Text style={{ fontSize: 14}}>long press</Text>
+						</View>
+					</TouchableHighlight>
+
+				</View>
+
+			</View>
+		)
+	}
+
+	gameIsOff = () => {
+		return (
+			<View style={{height: this.state.height, justifyContent: 'center', width: this.state.width, marginBottom: this.state.mz}}>
+				
+				{ this.title() }
+
+				<View style={{justifyContent: 'center', alignItems: 'center', alignContent: 'center', height: this.state.sz, width: this.state.width, borderWidth: 0, marginBottom: this.state.mz}}>
+					
+					<View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center', alignContent: 'center'}}>
+						<View><Text>Enter the {(this.state.ourLettersWord.length == 0) ? 'CENTER' : 'another'} Letter: </Text></View>
+						<View style={{height: this.state.sz, width: this.state.sz}}>
+							<TextInput
+								style={{
+									height: this.state.sz,
+									width: this.state.sz,
+									borderWidth: 2,
+									padding: 5,
+								fontSize: 15, 
+								}}
+								value={''}
+								defaultValue={''}
+								autoFocus={true}
+								flex={1}
+								selectTextOnFocus={true}
+								onChangeText={(text) => { this.updateStart(text)}} />
+						</View>
+					</View>
+					<View style={{justifyContent: 'center', alignItems: 'center', alignContent: 'center'}}>
+						
+						
+					</View>
+				</View>
+				
+				{ this.show_box_grid() }
+
+			</View>
+		)
+	}
+
+	onLayout(nativeEvent) {
+		if (this.state.height == 0) {
+			let {height, width} = Dimensions.get("window");
+			this.setState({height: height, width: width, sz: Math.floor(height / numOfLines), mz: Math.floor((height / numOfLines) / 2)})
+		}
+	}
 
     render = () => {
-      return (
-      <>
-        <StatusBar barStyle="dark-content" />
 
-        <SafeAreaView style={{flex: 0, justifyContent: 'center', alignItems: 'center', marginTop: mz}}>
+		return (
+			<>
+				<StatusBar barStyle="dark-content" />
 
-              { (this.state.ourLetters.length == 7) ?
-
-                <View>
-                  <ScrollView 
-                    style={{height: sz * 2, width: 300, borderWidth: 1, borderColor: 'red', marginBottom: mz}}
-                    contentContainerStyle={{flexDirection: 'row', flexWrap: 'wrap'}}
-                    >
-                      { this.showWords() }
-
-                  </ScrollView>
-
-                  <TouchableHighlight onPress={this.processWord}>
-                    <View style={{height: sz * 2, width: 300, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'purple', marginBottom: mz}}>
-                      <Text style={{fontWeight: 'bold', fontSize: 20}}>{this.state.inputWord}</Text>
-                    </View>
-                  </TouchableHighlight>
-
-                  <View style={{height: sz * 8, width: 300, justifyContent: 'center', borderWidth: 1, borderColor: 'green', alignItems: 'center', marginBottom: mz}}>
-                      <View style={{flexDirection: 'row'}}>
-                        <Box /><Box pressLetter={this.pressLetter}  lv={1}/><Box />
-                      </View>
-                      <View style={{flexDirection: 'row'}}>
-                        <Box pressLetter={this.pressLetter} lv={2}/><Box /><Box pressLetter={this.pressLetter} lv={3}/>
-                      </View>
-                      <View style={{flexDirection: 'row'}}>
-                        <Box /><Box pressLetter={this.pressLetter} lv={0}/><Box />
-                      </View>
-                      <View style={{flexDirection: 'row'}}>
-                        <Box pressLetter={this.pressLetter} lv={4}/><Box /><Box pressLetter={this.pressLetter} lv={5} />
-                      </View>
-                      <View style={{flexDirection: 'row'}}>
-                        <Box /><Box pressLetter={this.pressLetter} lv={6}/><Box />
-                      </View>
-                  </View>
-    
-                  <TouchableHighlight onPress={this.deleteWord}>
-                    <View style={{height: sz * 1.5, width: 100, marginLeft: sz, justifyContent: 'center', alignItems: 'center', borderWidth: 1}}>
-                      <Text style={{fontWeight: 'bold', fontSize: 20}}>DELETE</Text>
-                    </View>
-                  </TouchableHighlight>
-
-                  <View style={{height: sz * 2, width: 300, marginLeft: sz, justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginBottom: mz}}>
-                    <Text style={{fontWeight: 'bold', fontSize: 15}}>{this.state.message}</Text>
-                  </View>
-                </View>
-                :
-                <View style={{height: sz * 2, width: 300, borderWidth: 1, borderColor: 'red', marginBottom: mz}}>
-                <TextInput
-                      style={{
-                        paddingLeft: 5,
-                        paddingRight: 5,
-                        paddingTop: 0,
-                        paddingBottom: 0,
-                        borderColor: 'grey', 
-                        fontSize: 15, 
-                        alignSelf: 'stretch',
-                        borderWidth: 1, borderRadius: 0			
-                      }}
-                      value={this.state.ourLettersWord}
-                      defaultValue={''}
-                      placeholder={'Enter 7 unique letters, first being center box'}
-                      autoFocus={true}
-                      flex={1}
-                      selectTextOnFocus={true}
-                      onChangeText={(text) => { this.updateStart(text)}} />
-                </View>
-              }
-
-        </SafeAreaView>
-      </>
-    );
-  }
+				<SafeAreaView onLayout={(nativeEvent) => this.onLayout(nativeEvent)} style={{ justifyContent: 'center', alignItems: 'center'}}>
+					{ (this.state.height > 0 && this.state.gameOn) && this.gameIsOn() }
+					{ (this.state.height > 0 && !this.state.gameOn) && this.gameIsOff() }
+				</SafeAreaView>
+			</>
+			)
+	}
 }
-
-const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: Colors.lighter,
-  },
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
-  body: {
-    backgroundColor: Colors.white,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
-  },
-});
 
 export default App;
