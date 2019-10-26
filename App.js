@@ -8,6 +8,7 @@
 
 import React, { Component } from 'react';
 import {
+	Alert,
 	Dimensions,
 	SafeAreaView,
 	ScrollView,
@@ -17,6 +18,23 @@ import {
 	TouchableHighlight,
   StatusBar,
 } from 'react-native';
+
+import AppConfig from './AppConfig'
+
+import { configureFontAwesomePro } from "react-native-fontawesome-pro";
+configureFontAwesomePro();
+
+import Icon from "react-native-fontawesome-pro";
+
+const RESET_FULL = 1;
+const RESET_SMALL = 2;
+
+const icon5 = (name, size, color = 'black', sourceSpecial) =>
+	<Icon name={name} type={sourceSpecial} size={size} color={color} brand/>
+
+// Allow/disallow font-scaling in app
+// Text.defaultProps.allowFontScaling = AppConfig.allowTextFontScaling  // WRONG!
+Text.allowFontScaling = AppConfig.allowTextFontScaling  // Working!
 
 const words = require('./words_dictionary.json'); //with path
 
@@ -86,6 +104,13 @@ const numOfLines = 26;
       this.setState({inputWord: newWord})
     }
 
+	deleteChar = () => {
+		let newWord = [...this.state.inputWord];
+		if (newWord.length > 0) {
+			this.setState({inputWord: newWord.slice(0, newWord.length - 1)})
+		}
+	}
+
     addToList = () => {
       let newList = [...this.state.wordList];
       let aWord = this.state.inputWord.join("")
@@ -140,7 +165,7 @@ const numOfLines = 26;
         )
       })
 
-      return nA
+      return [...nA]
     }
 
     updateStart = (text) => {
@@ -208,28 +233,70 @@ const numOfLines = 26;
 			<View style={{justifyContent: 'center', alignItems: 'center'}}>
 				{ this.title() }
 
-				<View style={{height: this.state.sz * 8, width: this.state.width - (this.state.mz * 2), marginLeft: this.state.mz}}>
-					
-					<ScrollView 
-						style={{height: this.state.sz * 8, width: this.state.width - (this.state.mz * 3), borderWidth: 0, borderColor: 'red', marginBottom: this.state.mz}}
-						contentContainerStyle={{flex: 1, flexGrow: 1, flexDirection: 'row', flexWrap: 'wrap'}}
-					>
-						{ this.showWords() }
+				<View style={{height: this.state.sz * 8, width: this.state.width, flexDirection: 'row'}}>
 
-					</ScrollView>
+						<View style={{height: this.state.sz * 8, width: Math.floor((this.state.width*.60) - this.state.mz), marginLeft: this.state.mz}}>
+							<ScrollView
+								style={{
+									height: this.state.sz * 8, 
+									borderWidth: 0, 
+									borderColor: 'red', 
+									marginBottom: this.state.mz,
+								}}
+								horizontal={false}
+								showsVerticalScrollIndicator={true}
+							>
+								<View style ={{flex: 1, flexGrow: 1, flexDirection: 'row', flexWrap: 'wrap'}}>
+									{this.showWords() }
+								</View>
+							</ScrollView>
+						</View>
+				
+						<View style={{
+							height: this.state.sz * 8, 
+							width: Math.floor((this.state.width*.40) - this.state.mz), 
+							marginLeft: this.state.mz,
+							}}>
+								<View style={{
+									height: this.state.sz * 2, 
+									width: Math.floor((this.state.width*.40) - this.state.mz), 
+									marginLeft: this.state.mz,
+									justifyContent: 'center',
+									alignItems: 'center'
+								}}>
+									<Text># Found</Text>
+									<Text>{this.state.wordList.length}</Text>
+								</View>
+						</View>
+				
+				</View>	
+
+				<View style={{flexDirection: 'row', height: this.state.sz * 2, width: this.state.width, marginLeft: this.state.mz}}>
+
+					<TouchableHighlight onPress={this.deleteWord}>
+						<View style={{height: this.state.sz * 2, width: this.state.sz * 2, justifyContent: 'center', alignItems: 'center'}}>
+							{ icon5('trash-alt', this.state.sz, 'blue')}
+						</View>
+					</TouchableHighlight>
+					<TouchableHighlight onPress={this.processWord}>
+						<View style={{
+							height: this.state.sz * 2, 
+							width: this.state.width - (this.state.sz * 4), 
+							justifyContent: 'center', alignItems: 'center', 
+							borderWidth: 3, 
+							borderColor: 'blue', 
+							marginBottom: this.state.mz
+							}}>
+							<Text style={{fontWeight: 'bold', fontSize: 20}}>{this.state.inputWord}</Text>
+						</View>
+					</TouchableHighlight>
+
+					<TouchableHighlight onPress={this.deleteChar}>
+						<View style={{height: this.state.sz * 2, width: this.state.sz * 2, justifyContent: 'center', alignItems: 'center'}}>
+							{ icon5('backspace', this.state.sz, 'blue')}
+						</View>
+					</TouchableHighlight>
 				</View>
-				<TouchableHighlight onPress={this.processWord}>
-					<View style={{
-						height: this.state.sz * 2, 
-						width: this.state.width - (this.state.sz * 3), 
-						justifyContent: 'center', alignItems: 'center', 
-						borderWidth: 3, 
-						borderColor: 'blue', 
-						marginBottom: this.state.mz
-						}}>
-						<Text style={{fontWeight: 'bold', fontSize: 20}}>{this.state.inputWord}</Text>
-					</View>
-				</TouchableHighlight>
 
 				{ this.show_box_grid() }
 
@@ -238,23 +305,15 @@ const numOfLines = 26;
 				</View>
 
 				<View style={{flexDirection: 'row', height: this.state.sz * 1.5, width: this.state.width}}>
-					<TouchableHighlight onLongPress={this.restartSmall}>
-						<View style={{height: this.state.sz * 1.5, width: this.state.width/10*2, marginLeft: this.state.width/10, justifyContent: 'center', alignItems: 'center', borderWidth: 1}}>
-							<Text style={{ fontSize: 14}}>reset</Text>
-							<Text style={{ fontSize: 14}}>long press</Text>
+					<TouchableHighlight onPress={() => this.testRestart(RESET_SMALL, 'Restart with these letters?')}>
+						<View style={{height: this.state.sz * 1.5, width: this.state.width * .35, marginLeft: this.state.width * .1,  justifyContent: 'center', alignItems: 'center', borderWidth: 1}}>
+							<Text style={{ fontSize: 15}}>Restart</Text>
 						</View>
 					</TouchableHighlight>
 
-					<TouchableHighlight onPress={this.deleteWord}>
-						<View style={{height: this.state.sz * 1.5, width: this.state.width/10*2, marginLeft: this.state.width/10, justifyContent: 'center', alignItems: 'center', borderWidth: 1}}>
-							<Text style={{fontWeight: 'bold', fontSize: 20}}>DELETE</Text>
-						</View>
-					</TouchableHighlight>
-
-					<TouchableHighlight onLongPress={this.restartFull}>
-						<View style={{height: this.state.sz * 1.5, width: this.state.width/10*2, marginLeft: this.state.width/10, justifyContent: 'center', alignItems: 'center', borderWidth: 1}}>
-							<Text style={{fontSize: 14}}>new letters</Text>
-							<Text style={{ fontSize: 14}}>long press</Text>
+					<TouchableHighlight onPress={() => this.testRestart(RESET_FULL, 'Pick new letters and start over?')}>
+						<View style={{height: this.state.sz * 1.5, width: this.state.width * .35, marginLeft: this.state.width * .1, justifyContent: 'center', alignItems: 'center', borderWidth: 1}}>
+							<Text style={{fontSize: 15}}>New Letters</Text>
 						</View>
 					</TouchableHighlight>
 
@@ -262,6 +321,24 @@ const numOfLines = 26;
 
 			</View>
 		)
+	}
+
+	testRestart = (type, message) => {
+		// Works on both iOS and Android
+		Alert.alert(
+			message,
+			'Press OK to reset',
+			[
+			{text: message, onPress: () => console.log('Ask me later pressed')},
+			{
+				text: 'Cancel',
+				onPress: () => null,
+				style: 'cancel',
+			},
+			{text: 'OK', onPress: (type == RESET_FULL) ? () => this.restartFull() : () => this.restartSmall()},
+			],
+			{cancelable: false},
+		);
 	}
 
 	gameIsOff = () => {
