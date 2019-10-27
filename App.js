@@ -10,6 +10,8 @@ import React, { Component } from 'react';
 import {
 	Alert,
 	Dimensions,
+	Platform, 
+	PixelRatio,
 	SafeAreaView,
 	ScrollView,
 	View,
@@ -19,8 +21,25 @@ import {
   StatusBar,
 } from 'react-native';
 
-import AppConfig from './AppConfig'
 
+const {
+  width: SCREEN_WIDTH,
+  height: SCREEN_HEIGHT,
+} = Dimensions.get('window');
+
+// based on iphone 5s's scale
+const scale = SCREEN_WIDTH / 320;
+
+export function normalize(size) {
+  const newSize = size * scale 
+  if (Platform.OS === 'ios') {
+    return Math.round(PixelRatio.roundToNearestPixel(newSize))
+  } else {
+    return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 2
+  }
+}
+
+import AppConfig from './AppConfig'
 
 import FontAwesome, { SolidIcons, RegularIcons, BrandIcons } from 'react-native-fontawesome';
 
@@ -179,7 +198,7 @@ const numOfLines = 26;
 		if (curWord == '' || word.startsWith(curWord))
 			nA.push(          
 				<View key={index}>
-					<Text style={{fontWeight: 'bold', fontSize: 20, marginRight: 5}}>{this.showAWord(word)}</Text>
+					<Text style={{fontWeight: 'bold', fontSize: styles.large.fontSize, marginRight: 5}}>{this.showAWord(word)}</Text>
 				</View>
 			)
       })
@@ -237,10 +256,10 @@ const numOfLines = 26;
 				marginRight: this.state.mz, 
 				height: this.state.sz * 3.5, 
 				width: this.state.width - (2 * this.state.mz), borderWidth: 1}}>
-				<View style={{marginBottom: this.state.mz}}>
-					<Text style={{fontSize: 20, fontWeight: 'bold'}}>Welcome to Spell2</Text></View>
-				<View>
-					<Text style={{fontSize: 15, fontWeight: 'bold'}}>Choose more than 3 letters to make words</Text></View>
+				<View style={{marginBottom: this.state.mz, justifyContent: 'center', alignItems: 'center'}}>
+					<Text style={{fontSize: styles.large.fontSize, fontWeight: 'bold'}}>Welcome to Spell2</Text></View>
+				<View style={{marginBottom: this.state.mz, justifyContent: 'center', alignItems: 'center'}}>
+					<Text style={{fontSize: styles.small.fontSize, fontWeight: 'bold', textAlign: 'center'}}>Choose more than 3 letters to make words.  Good Luck!</Text></View>
 			</View>
 		)
 
@@ -253,7 +272,7 @@ const numOfLines = 26;
 
 				<View style={{height: this.state.sz * 8, width: this.state.width, flexDirection: 'row'}}>
 
-						<View style={{height: this.state.sz * 8, width: Math.floor((this.state.width*.80) - (this.state.mz * 2)), marginLeft: this.state.mz}}>
+						<View style={{height: this.state.sz * 78, width: Math.floor((this.state.width*.78) - (this.state.mz * 2)), marginLeft: this.state.mz}}>
 							<ScrollView
 								style={{
 									height: this.state.sz * 8, 
@@ -272,17 +291,17 @@ const numOfLines = 26;
 				
 						<View style={{
 							height: this.state.sz * 8, 
-							width: Math.floor((this.state.width*.20) - (this.state.mz * 2)), 
+							width: Math.floor((this.state.width*.22) - (this.state.mz * 2)), 
 							marginLeft: this.state.mz,
 							}}>
 								<View style={{
 									height: this.state.sz * 2, 
-									width: Math.floor((this.state.width * .20) - (this.state.mz * 2)), 
+									width: Math.floor((this.state.width * .22) - (this.state.mz * 2)), 
 									marginLeft: this.state.mz,
 									justifyContent: 'center',
 									alignItems: 'center'
 								}}>
-									<Text style={{fontWeight: 'bold'}}>Found</Text>
+									<Text style={{fontSize: styles.small.fontSize, fontWeight: 'bold'}}>Found</Text>
 									<Text>{this.state.wordList.length}</Text>
 								</View>
 						</View>
@@ -305,7 +324,7 @@ const numOfLines = 26;
 							borderColor: 'blue', 
 							marginBottom: this.state.mz
 							}}>
-							<Text style={{fontWeight: 'bold', fontSize: 20}}>{this.state.inputWord}</Text>
+							<Text style={{fontWeight: 'bold', fontSize: styles.xlarge.fontSize}}>{this.state.inputWord}</Text>
 						</View>
 					</TouchableHighlight>
 
@@ -319,19 +338,19 @@ const numOfLines = 26;
 				{ this.show_box_grid() }
 
 				<View style={{height: this.state.sz * 1.5, width: this.state.width, marginLeft: this.state.sz, justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginBottom: this.state.mz}}>
-					<Text style={{fontWeight: 'bold', fontSize: 15, color: (this.state.messageType == GOOD) ? 'grey' : 'red' }}>{this.state.message}</Text>
+					<Text style={{fontWeight: 'bold', fontSize: styles.medium.fontSize, color: (this.state.messageType == GOOD) ? 'grey' : 'red' }}>{this.state.message}</Text>
 				</View>
 
 				<View style={{flexDirection: 'row', height: this.state.sz * 1.5, width: this.state.width}}>
 					<TouchableHighlight onPress={() => this.testRestart(RESET_SMALL, 'Restart with these letters?')}>
 						<View style={{height: this.state.sz * 1.5, width: this.state.width * .35, marginLeft: this.state.width * .1,  justifyContent: 'center', alignItems: 'center', borderWidth: 1}}>
-							<Text style={{ fontSize: 15}}>Restart</Text>
+							<Text style={{ fontSize: styles.small.fontSize}}>Restart</Text>
 						</View>
 					</TouchableHighlight>
 
 					<TouchableHighlight onPress={() => this.testRestart(RESET_FULL, 'Pick new letters and start over?')}>
 						<View style={{height: this.state.sz * 1.5, width: this.state.width * .35, marginLeft: this.state.width * .1, justifyContent: 'center', alignItems: 'center', borderWidth: 1}}>
-							<Text style={{fontSize: 15}}>New Letters</Text>
+							<Text style={{fontSize: styles.small.fontSize}}>New Letters</Text>
 						</View>
 					</TouchableHighlight>
 
@@ -378,7 +397,7 @@ const numOfLines = 26;
 									width: this.state.sz,
 									borderWidth: 2,
 									padding: 5,
-								fontSize: 15, 
+								fontSize: styles.medium.fontSize, 
 								}}
 								value={''}
 								defaultValue={''}
@@ -422,4 +441,23 @@ const numOfLines = 26;
 	}
 }
 
+const styles = {
+	mini: {
+	  fontSize: normalize(12),
+	},
+	small: {
+	  fontSize: normalize(14),
+	},
+	medium: {
+	  fontSize: normalize(17),
+	},
+	large: {
+	  fontSize: normalize(20),
+	},
+	xlarge: {
+	  fontSize: normalize(24),
+	},
+  };
+
 export default App;
+
