@@ -21,16 +21,14 @@ import {
 
 import AppConfig from './AppConfig'
 
-import { configureFontAwesomePro } from "react-native-fontawesome-pro";
-configureFontAwesomePro();
 
-import Icon from "react-native-fontawesome-pro";
+import FontAwesome, { SolidIcons, RegularIcons, BrandIcons } from 'react-native-fontawesome';
 
 const RESET_FULL = 1;
 const RESET_SMALL = 2;
 
-const icon5 = (name, size, color = 'black', sourceSpecial) =>
-	<Icon name={name} type={sourceSpecial} size={size} color={color} brand/>
+const GOOD=1
+const BAD =2
 
 // Allow/disallow font-scaling in app
 // Text.defaultProps.allowFontScaling = AppConfig.allowTextFontScaling  // WRONG!
@@ -45,13 +43,13 @@ const Box = (props) => {
 	pressLetter
   } = props;
 
-  console.log(JSON.stringify(props))
-
   return (
     <TouchableHighlight onPress={(lv != null) ? () => pressLetter(lv) : null}>
-      <View style={{justifyContent: 'center', alignItems: 'center', height: stt.sz, width: stt.sz, marginRight: stt.sz, borderWidth: (lv != null) ? 1:0}}>
-        {(lv != null) && <Text style={{fontWeight: 'bold'}}>{stt.ourLetters[lv]}</Text> }
-     </View> 
+		<View style={{borderWidth: 0, paddingLeft: stt.mz, paddingRight: stt.mz}}>
+			<View style={{justifyContent: 'center', alignItems: 'center', height: stt.sz, width: stt.sz,  borderWidth: (lv != null) ? 1:0}}>
+				{(lv != null) && <Text style={{fontWeight: 'bold'}}>{stt.ourLetters[lv]}</Text> }
+			</View> 
+		</View>
      </TouchableHighlight>
   )
 }
@@ -71,6 +69,7 @@ const numOfLines = 26;
 			mz: 0,
 			inputWord: [],
 			message: '',
+			messageType: GOOD,
 			wordList: [],
 			ourLetters: [],
 			ourLettersWord: '',
@@ -96,12 +95,12 @@ const numOfLines = 26;
     }
 
     showAWord = (word) => {
-      return (word.slice(0,1) + word.slice(1).toLowerCase())
+      return (word.slice(0,1).toUpperCase() + word.slice(1))
     }
 
     pressLetter = (letter) => {
       let newWord = [...this.state.inputWord, this.state.ourLetters[ letter ]];
-      this.setState({inputWord: newWord})
+      this.setState({inputWord: newWord, message: '', messageType: GOOD})
     }
 
 	deleteChar = () => {
@@ -109,12 +108,14 @@ const numOfLines = 26;
 		if (newWord.length > 0) {
 			this.setState({inputWord: newWord.slice(0, newWord.length - 1)})
 		}
+		this.setState({message: '', messageType: GOOD})
 	}
 
     addToList = () => {
       let newList = [...this.state.wordList];
-      let aWord = this.state.inputWord.join("")
-      newList.push(aWord);
+	
+	  let aWord = this.state.inputWord.join("")
+      newList.push(aWord.toLowerCase());
       newList.sort();
      
       this.setState({wordList: newList})
@@ -126,43 +127,61 @@ const numOfLines = 26;
     }
 
     processWord = () => {
-      let message;
-      if (this.state.inputWord.length == 0)
-        message = 'Ready';
-      else if (this.state.inputWord.indexOf(this.state.ourLetters[0]) == -1)
-        message = 'You did not use the center letter'
-      else if (this.state.inputWord.length < 3)
-		message = 'Words must be at least 3 characters long'
-	  else if (this.state.wordList.indexOf(this.state.inputWord.join("")) > -1)
-	 	message = `Sorry... Word ${this.showAWord(this.state.inputWord.join(""))} already found!`
-      else {
-        let result = this.testWord()
-        if (result) {
-          message = `Great!!! Word ${this.showAWord(this.state.inputWord.join(""))} is acceptable!!!`
-          this.addToList();
-          this.setState({inputWord: ''})
-        } else {
-          message = `Sorry... Word ${this.showAWord(this.state.inputWord.join(""))} is not found.`
-        }
+		let message;
+		let messageType;
+
+		if (this.state.inputWord.length == 0) {
+			message = 'Ready';
+			messageType = GOOD;
+		}
+      	else if (this.state.inputWord.indexOf(this.state.ourLetters[0]) == -1) {
+			message = 'You did not use the center letter'
+			messageType = BAD;
+		}
+      	else if (this.state.inputWord.length < 3) {
+			message = 'Words must be at least 3 characters long'
+			messageType = BAD;
+		}
+		else if (this.state.wordList.indexOf(this.state.inputWord.join("")) > -1) {
+			message = `Word ${this.showAWord(this.state.inputWord.join(""))} already found!`
+			messageType = BAD;
+		}
+		else {
+			let result = this.testWord()
+			if (result) {
+				message = `Great!!! Word ${this.showAWord(this.state.inputWord.join(""))} is acceptable!!!`
+				messageType = GOOD;
+
+				this.addToList();
+				this.setState({inputWord: ''})
+
+			} else {
+				message = `Sorry... Word ${this.showAWord(this.state.inputWord.join(""))} is not found.`
+				messageType = BAD;
+			}
 
       }
 
-      this.setState({message: message})
+      this.setState({message: message, messageType: messageType})
 
     }
 
     deleteWord = () => {
-      this.setState({inputWord: []})
+      this.setState({inputWord: [], message: '', messageType: GOOD})
     }
 
     showWords = () => {
-      let nA = [];
+	  let nA = [];
+
+	  let curWord = (this.state.inputWord.length > 0) ? this.state.inputWord.join("").toLowerCase() : ''
+
       this.state.wordList.forEach((word, index) => {
-        nA.push(          
-            <View key={index}>
-              <Text style={{fontWeight: 'bold', fontSize: 20, marginRight: 5}}>{this.showAWord(word)}</Text>
-            </View>
-        )
+		if (curWord == '' || word.startsWith(curWord))
+			nA.push(          
+				<View key={index}>
+					<Text style={{fontWeight: 'bold', fontSize: 20, marginRight: 5}}>{this.showAWord(word)}</Text>
+				</View>
+			)
       })
 
       return [...nA]
@@ -213,16 +232,15 @@ const numOfLines = 26;
 			<View style={{
 				justifyContent: 'center', 
 				alignItems: 'center', 
+				marginTop: this.state.mz, 
 				marginLeft: this.state.mz, 
 				marginRight: this.state.mz, 
-				height: this.state.sz * 4, 
-				width: this.state.width - (2 * this.state.mz), borderWidth: 0}}>
+				height: this.state.sz * 3.5, 
+				width: this.state.width - (2 * this.state.mz), borderWidth: 1}}>
 				<View style={{marginBottom: this.state.mz}}>
 					<Text style={{fontSize: 20, fontWeight: 'bold'}}>Welcome to Spell2</Text></View>
 				<View>
-					<Text style={{fontSize: 15, fontWeight: 'bold'}}>- Use the center letter and other letters</Text></View>
-				<View>
-					<Text style={{fontSize: 15, fontWeight: 'bold'}}>- Three letters minimum per word</Text></View>
+					<Text style={{fontSize: 15, fontWeight: 'bold'}}>Choose more than 3 letters to make words</Text></View>
 			</View>
 		)
 
@@ -235,7 +253,7 @@ const numOfLines = 26;
 
 				<View style={{height: this.state.sz * 8, width: this.state.width, flexDirection: 'row'}}>
 
-						<View style={{height: this.state.sz * 8, width: Math.floor((this.state.width*.60) - this.state.mz), marginLeft: this.state.mz}}>
+						<View style={{height: this.state.sz * 8, width: Math.floor((this.state.width*.80) - (this.state.mz * 2)), marginLeft: this.state.mz}}>
 							<ScrollView
 								style={{
 									height: this.state.sz * 8, 
@@ -254,28 +272,28 @@ const numOfLines = 26;
 				
 						<View style={{
 							height: this.state.sz * 8, 
-							width: Math.floor((this.state.width*.40) - this.state.mz), 
+							width: Math.floor((this.state.width*.20) - (this.state.mz * 2)), 
 							marginLeft: this.state.mz,
 							}}>
 								<View style={{
 									height: this.state.sz * 2, 
-									width: Math.floor((this.state.width*.40) - this.state.mz), 
+									width: Math.floor((this.state.width * .20) - (this.state.mz * 2)), 
 									marginLeft: this.state.mz,
 									justifyContent: 'center',
 									alignItems: 'center'
 								}}>
-									<Text># Found</Text>
+									<Text style={{fontWeight: 'bold'}}>Found</Text>
 									<Text>{this.state.wordList.length}</Text>
 								</View>
 						</View>
 				
 				</View>	
 
-				<View style={{flexDirection: 'row', height: this.state.sz * 2, width: this.state.width, marginLeft: this.state.mz}}>
+				<View style={{flexDirection: 'row', height: this.state.sz * 2, width: this.state.width}}>
 
 					<TouchableHighlight onPress={this.deleteWord}>
 						<View style={{height: this.state.sz * 2, width: this.state.sz * 2, justifyContent: 'center', alignItems: 'center'}}>
-							{ icon5('trash-alt', this.state.sz, 'blue')}
+							<FontAwesome icon={RegularIcons.trashAlt} style={{fontSize: this.state.sz}} color='blue' />
 						</View>
 					</TouchableHighlight>
 					<TouchableHighlight onPress={this.processWord}>
@@ -293,15 +311,15 @@ const numOfLines = 26;
 
 					<TouchableHighlight onPress={this.deleteChar}>
 						<View style={{height: this.state.sz * 2, width: this.state.sz * 2, justifyContent: 'center', alignItems: 'center'}}>
-							{ icon5('backspace', this.state.sz, 'blue')}
+						<FontAwesome icon={SolidIcons.backspace}  style={{fontSize: this.state.sz}} color='blue'  />
 						</View>
 					</TouchableHighlight>
 				</View>
 
 				{ this.show_box_grid() }
 
-				<View style={{height: this.state.sz * 2, width: this.state.width, marginLeft: this.state.sz, justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginBottom: this.state.mz}}>
-					<Text style={{fontWeight: 'bold', fontSize: 15}}>{this.state.message}</Text>
+				<View style={{height: this.state.sz * 1.5, width: this.state.width, marginLeft: this.state.sz, justifyContent: 'center', alignItems: 'center', borderWidth: 0, marginBottom: this.state.mz}}>
+					<Text style={{fontWeight: 'bold', fontSize: 15, color: (this.state.messageType == GOOD) ? 'grey' : 'red' }}>{this.state.message}</Text>
 				</View>
 
 				<View style={{flexDirection: 'row', height: this.state.sz * 1.5, width: this.state.width}}>
@@ -343,9 +361,11 @@ const numOfLines = 26;
 
 	gameIsOff = () => {
 		return (
-			<View style={{height: this.state.height, justifyContent: 'center', width: this.state.width, marginBottom: this.state.mz}}>
+			<View style={{height: this.state.height * .7, justifyContent: 'center', width: this.state.width, marginBottom: this.state.mz}}>
 				
+				<View style={{height: this.state.sz}} />
 				{ this.title() }
+				<View style={{height: this.state.sz}} />
 
 				<View style={{justifyContent: 'center', alignItems: 'center', alignContent: 'center', height: this.state.sz, width: this.state.width, borderWidth: 0, marginBottom: this.state.mz}}>
 					
