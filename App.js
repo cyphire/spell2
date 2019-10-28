@@ -79,21 +79,21 @@ const numOfLines = 26;
   class App extends Component {
     
     constructor(props) {
-	  super(props)
+      super(props)
 	  
-		this.state = {
-			height: 0,
-			width: 0,
-			sz: 0,
-			mz: 0,
-			inputWord: [],
-			message: '',
-			messageType: GOOD,
-			wordList: [],
-			ourLetters: [],
-			ourLettersWord: '',
-			gameOn: false
-		}
+      this.state = {
+          height: 0,
+          width: 0,
+          sz: 0,
+          mz: 0,
+          inputWord: [],
+          message: '',
+          messageType: GOOD,
+          wordList: [],
+          ourLetters: [],
+          ourLettersWord: '',
+          gameOn: false
+      }
     }
 
 	restartFull = () => {
@@ -161,7 +161,7 @@ const numOfLines = 26;
 			message = 'Words must be at least 3 characters long'
 			messageType = BAD;
 		}
-		else if (this.state.wordList.indexOf(this.state.inputWord.join("")) > -1) {
+		else if (this.state.wordList.indexOf(this.state.inputWord.join("").toLowerCase()) > -1) {
 			message = `Word ${this.showAWord(this.state.inputWord.join(""))} already found!`
 			messageType = BAD;
 		}
@@ -259,7 +259,7 @@ const numOfLines = 26;
 				<View style={{marginBottom: this.state.mz, justifyContent: 'center', alignItems: 'center'}}>
 					<Text style={{fontSize: styles.large.fontSize, fontWeight: 'bold'}}>Welcome to Spell2</Text></View>
 				<View style={{marginBottom: this.state.mz, justifyContent: 'center', alignItems: 'center'}}>
-					<Text style={{fontSize: styles.small.fontSize, fontWeight: 'bold', textAlign: 'center'}}>Choose more than 3 letters to make words.  Good Luck!</Text></View>
+					<Text style={{fontSize: styles.small.fontSize, fontWeight: 'bold', textAlign: 'center'}}>Choose more than 3 letters to make words.</Text></View>
 			</View>
 		)
 
@@ -272,10 +272,10 @@ const numOfLines = 26;
 
 				<View style={{height: this.state.sz * 8, width: this.state.width, flexDirection: 'row'}}>
 
-						<View style={{height: this.state.sz * 78, width: Math.floor((this.state.width*.78) - (this.state.mz * 2)), marginLeft: this.state.mz}}>
+						<View style={{height: this.state.sz * 8, width: Math.floor((this.state.width*.78) - (this.state.mz * 2)), marginLeft: this.state.mz}}>
 							<ScrollView
 								style={{
-									height: this.state.sz * 8, 
+									height: this.state.sz * 3, 
 									borderWidth: 0, 
 									borderColor: 'red', 
 									marginBottom: this.state.mz,
